@@ -7,12 +7,10 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Desktop sidebar */}
       <div className="hidden sm:flex">
         <Sidebar />
       </div>
 
-      {/* Mobile navigation */}
       {menuOpen && (
         <div className="fixed inset-0 z-50 sm:hidden">
           <button

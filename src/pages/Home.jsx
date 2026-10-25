@@ -59,7 +59,6 @@ function Home() {
           </div>
         </section>
 
-        {/* Recent orders */}
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <div className="border-b border-gray-200 px-5 py-4">
             <h2 className="font-semibold text-gray-900">
