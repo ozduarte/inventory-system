@@ -1,4 +1,3 @@
-
 function formatExpirationDate(dateValue) {
   if (!dateValue || typeof dateValue !== "string") {
     return "—";
@@ -30,10 +29,10 @@ function formatExpirationDate(dateValue) {
   return date.toLocaleDateString();
 }
 
-function InventoryTable({ items, totalItems, onUpdateItem }) {
+function InventoryTable({ items, totalItems, onEditItem }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[800px] text-left text-sm">
+      <table className="w-full min-w-[800] text-left text-sm">
         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
           <tr>
             <th className="px-5 py-3 font-medium">Item</th>
@@ -94,10 +93,10 @@ function InventoryTable({ items, totalItems, onUpdateItem }) {
                 <td className="whitespace-nowrap px-5 py-4">
                   <button
                     type="button"
-                    onClick={() => onUpdateItem(item)}
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                    onClick={() => onEditItem(item)}
+                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
                   >
-                    Update
+                    Edit
                   </button>
                 </td>
               </tr>

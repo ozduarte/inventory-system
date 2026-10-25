@@ -1,16 +1,15 @@
-
 import { useEffect, useState } from "react";
 import { inventoryItems } from "../mockData";
 import InventorySearch from "../components/InventorySearch";
 import InventoryTable from "../components/InventoryTable";
 import AddItemModal from "../components/AddItemModal";
-import UpdateQuantityModal from "../components/UpdateQuantityModal";
+import EditItemModal from "../components/EditItemModal";
 
 function Inventory() {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(() => inventoryItems);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [itemToEdit, setItemToEdit] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -38,28 +37,22 @@ function Inventory() {
     );
   }
 
-  function handleUpdateItem(item) {
-    setSelectedItem(item);
+  function handleEditItem(item) {
+    setItemToEdit(item);
   }
 
-  function handleUpdateQuantity(itemId, newQuantity) {
-    const updatedItem = items.find((item) => item.id === itemId);
-
+  function handleSaveEdit(updatedItem) {
     setItems((previousItems) =>
       previousItems.map((item) =>
-        item.id === itemId
-          ? { ...item, quantity: newQuantity }
-          : item
+        item.id === updatedItem.id ? updatedItem : item
       )
     );
 
-    setSelectedItem(null);
+    setItemToEdit(null);
 
-    if (updatedItem) {
-      setSuccessMessage(
-        `${updatedItem.name} quantity updated successfully.`
-      );
-    }
+    setSuccessMessage(
+      `${updatedItem.name} has been updated successfully.`
+    );
   }
 
   return (
@@ -108,7 +101,7 @@ function Inventory() {
         <InventoryTable
           items={filteredItems}
           totalItems={items.length}
-          onUpdateItem={handleUpdateItem}
+          onEditItem={handleEditItem}
         />
       </section>
 
@@ -119,11 +112,11 @@ function Inventory() {
         />
       )}
 
-      {selectedItem && (
-        <UpdateQuantityModal
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-          onUpdateQuantity={handleUpdateQuantity}
+      {itemToEdit && (
+        <EditItemModal
+          item={itemToEdit}
+          onClose={() => setItemToEdit(null)}
+          onSave={handleSaveEdit}
         />
       )}
     </div>
