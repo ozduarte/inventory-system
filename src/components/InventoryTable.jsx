@@ -33,7 +33,7 @@ function formatExpirationDate(dateValue) {
 function InventoryTable({ items, totalItems }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[700px] text-left text-sm">
+      <table className="w-full min-w-[700] text-left text-sm">
         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
           <tr>
             <th className="px-5 py-3 font-medium">Item</th>
@@ -49,7 +49,6 @@ function InventoryTable({ items, totalItems }) {
           {items.map((item) => {
             const isLowStock = item.quantity < item.threshold;
 
-            // Support both the existing mock data and newly added items.
             const expirationDate =
               item.expirationDate ?? item.expiration;
 
