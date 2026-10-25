@@ -4,7 +4,7 @@ const initialFormData = {
   name: "",
   category: "",
   quantity: "",
-  unit: "kg",
+  unit: "",
   threshold: "",
   location: "",
   expiration: "",
@@ -35,6 +35,7 @@ function AddItemModal({ onClose, onAddItem }) {
       !formData.name.trim() ||
       !formData.category ||
       !formData.location ||
+      !formData.unit ||
       formData.quantity === "" ||
       formData.threshold === ""
     ) {
@@ -48,7 +49,9 @@ function AddItemModal({ onClose, onAddItem }) {
       quantity < 0 ||
       threshold < 0
     ) {
-      setError("Quantity and threshold must be valid non-negative numbers.");
+      setError(
+        "Quantity and threshold must be valid non-negative numbers."
+      );
       return;
     }
 
@@ -92,6 +95,7 @@ function AddItemModal({ onClose, onAddItem }) {
             >
               Add Inventory Item
             </h2>
+
             <p className="mt-1 text-sm text-gray-500">
               Enter the details for your new inventory item.
             </p>
@@ -112,6 +116,7 @@ function AddItemModal({ onClose, onAddItem }) {
             <label htmlFor="name" className={labelClass}>
               Item Name *
             </label>
+
             <input
               id="name"
               name="name"
@@ -129,6 +134,7 @@ function AddItemModal({ onClose, onAddItem }) {
               <label htmlFor="category" className={labelClass}>
                 Category *
               </label>
+
               <select
                 id="category"
                 name="category"
@@ -152,6 +158,7 @@ function AddItemModal({ onClose, onAddItem }) {
               <label htmlFor="location" className={labelClass}>
                 Storage Location *
               </label>
+
               <select
                 id="location"
                 name="location"
@@ -174,6 +181,7 @@ function AddItemModal({ onClose, onAddItem }) {
               <label htmlFor="quantity" className={labelClass}>
                 Current Quantity *
               </label>
+
               <input
                 id="quantity"
                 name="quantity"
@@ -192,6 +200,7 @@ function AddItemModal({ onClose, onAddItem }) {
               <label htmlFor="unit" className={labelClass}>
                 Unit *
               </label>
+
               <select
                 id="unit"
                 name="unit"
@@ -200,6 +209,7 @@ function AddItemModal({ onClose, onAddItem }) {
                 className={inputClass}
                 required
               >
+                <option value="">Select unit</option>
                 <option value="kg">Kilograms (kg)</option>
                 <option value="g">Grams (g)</option>
                 <option value="L">Liters (L)</option>
@@ -213,6 +223,7 @@ function AddItemModal({ onClose, onAddItem }) {
             <label htmlFor="threshold" className={labelClass}>
               Reorder Threshold *
             </label>
+
             <input
               id="threshold"
               name="threshold"
@@ -225,6 +236,7 @@ function AddItemModal({ onClose, onAddItem }) {
               placeholder="Minimum quantity before restocking"
               required
             />
+
             <p className="mt-1 text-xs text-gray-500">
               The item will be marked low stock when its quantity is at or
               below this level, depending on your inventory status logic.
@@ -235,6 +247,7 @@ function AddItemModal({ onClose, onAddItem }) {
             <label htmlFor="expiration" className={labelClass}>
               Expiration Date (optional)
             </label>
+
             <input
               id="expiration"
               name="expiration"
