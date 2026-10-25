@@ -4,11 +4,13 @@ import { inventoryItems } from "../mockData";
 import InventorySearch from "../components/InventorySearch";
 import InventoryTable from "../components/InventoryTable";
 import AddItemModal from "../components/AddItemModal";
+import UpdateQuantityModal from "../components/UpdateQuantityModal";
 
 function Inventory() {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(() => inventoryItems);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -34,6 +36,30 @@ function Inventory() {
     setSuccessMessage(
       `${newItem.name} has been added to your inventory.`
     );
+  }
+
+  function handleUpdateItem(item) {
+    setSelectedItem(item);
+  }
+
+  function handleUpdateQuantity(itemId, newQuantity) {
+    const updatedItem = items.find((item) => item.id === itemId);
+
+    setItems((previousItems) =>
+      previousItems.map((item) =>
+        item.id === itemId
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+
+    setSelectedItem(null);
+
+    if (updatedItem) {
+      setSuccessMessage(
+        `${updatedItem.name} quantity updated successfully.`
+      );
+    }
   }
 
   return (
@@ -82,6 +108,7 @@ function Inventory() {
         <InventoryTable
           items={filteredItems}
           totalItems={items.length}
+          onUpdateItem={handleUpdateItem}
         />
       </section>
 
@@ -89,6 +116,14 @@ function Inventory() {
         <AddItemModal
           onClose={() => setIsAddModalOpen(false)}
           onAddItem={handleAddItem}
+        />
+      )}
+
+      {selectedItem && (
+        <UpdateQuantityModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onUpdateQuantity={handleUpdateQuantity}
         />
       )}
     </div>
