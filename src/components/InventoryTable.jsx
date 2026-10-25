@@ -1,3 +1,35 @@
+
+function formatExpirationDate(dateValue) {
+  if (!dateValue || typeof dateValue !== "string") {
+    return "—";
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
+
+  if (!match) {
+    return "—";
+  }
+
+  const [, year, month, day] = match;
+
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    12
+  );
+
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day)
+  ) {
+    return "—";
+  }
+
+  return date.toLocaleDateString();
+}
+
 function InventoryTable({ items, totalItems }) {
   return (
     <div className="overflow-x-auto">
@@ -17,12 +49,17 @@ function InventoryTable({ items, totalItems }) {
           {items.map((item) => {
             const isLowStock = item.quantity < item.threshold;
 
+            // Support both the existing mock data and newly added items.
+            const expirationDate =
+              item.expirationDate ?? item.expiration;
+
             return (
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="px-5 py-4">
                   <p className="font-medium text-gray-900">
                     {item.name}
                   </p>
+
                   <p className="mt-1 text-xs text-gray-500">
                     {item.category}
                   </p>
@@ -41,9 +78,7 @@ function InventoryTable({ items, totalItems }) {
                 </td>
 
                 <td className="whitespace-nowrap px-5 py-4 text-gray-700">
-                  {new Date(
-                    `${item.expirationDate}T12:00:00`
-                  ).toLocaleDateString()}
+                  {formatExpirationDate(expirationDate)}
                 </td>
 
                 <td className="whitespace-nowrap px-5 py-4">
@@ -67,6 +102,7 @@ function InventoryTable({ items, totalItems }) {
                 <p className="font-medium text-gray-900">
                   No items found
                 </p>
+
                 <p className="mt-1 text-sm text-gray-500">
                   Try a different search term.
                 </p>
