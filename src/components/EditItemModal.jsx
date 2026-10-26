@@ -1,11 +1,21 @@
 import InventoryItemForm from "./InventoryItemForm";
 
-function EditItemModal({ item, onClose, onSave }) {
+function EditItemModal({ item, onClose, onSave, onDelete }) {
   function handleSubmit(formData) {
     onSave({
       ...item,
       ...formData,
     });
+  }
+
+  function handleDelete() {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${item.name}"? This action cannot be undone.`
+    );
+
+    if (confirmed) {
+      onDelete(item.id);
+    }
   }
 
   return (
@@ -31,6 +41,7 @@ function EditItemModal({ item, onClose, onSave }) {
             >
               Edit Inventory Item
             </h2>
+
             <p className="mt-1 text-sm text-gray-500">
               Update the details for {item.name}.
             </p>
@@ -52,6 +63,16 @@ function EditItemModal({ item, onClose, onSave }) {
           onSubmit={handleSubmit}
           onCancel={onClose}
         />
+
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="w-full cursor-pointer rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
+            Delete Item
+          </button>
+        </div>
       </section>
     </div>
   );
