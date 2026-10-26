@@ -55,6 +55,24 @@ function Inventory() {
     );
   }
 
+  function handleDeleteItem(itemId) {
+    const deletedItem = items.find(
+      (item) => item.id === itemId
+    );
+
+    if (!deletedItem) return;
+
+    setItems((previousItems) =>
+      previousItems.filter((item) => item.id !== itemId)
+    );
+
+    setItemToEdit(null);
+
+    setSuccessMessage(
+      `${deletedItem.name} has been deleted from your inventory.`
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -117,6 +135,7 @@ function Inventory() {
           item={itemToEdit}
           onClose={() => setItemToEdit(null)}
           onSave={handleSaveEdit}
+          onDelete={handleDeleteItem}
         />
       )}
     </div>
