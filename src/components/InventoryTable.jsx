@@ -1,3 +1,4 @@
+
 function formatExpirationDate(dateValue) {
   if (!dateValue || typeof dateValue !== "string") {
     return "—";
@@ -29,6 +30,52 @@ function formatExpirationDate(dateValue) {
   return date.toLocaleDateString();
 }
 
+function getExpirationStyle(dateValue) {
+  if (!dateValue || typeof dateValue !== "string") {
+    return "bg-gray-100 text-gray-600";
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
+
+  if (!match) {
+    return "bg-gray-100 text-gray-600";
+  }
+
+  const [, year, month, day] = match;
+
+  const expirationDate = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day)
+  );
+
+  if (
+    expirationDate.getFullYear() !== Number(year) ||
+    expirationDate.getMonth() !== Number(month) - 1 ||
+    expirationDate.getDate() !== Number(day)
+  ) {
+    return "bg-gray-100 text-gray-600";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const daysUntilExpiration = Math.round(
+    (expirationDate.getTime() - today.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (daysUntilExpiration < 0) {
+    return "bg-red-50 text-red-700";
+  }
+
+  if (daysUntilExpiration <= 3) {
+    return "bg-amber-50 text-amber-800";
+  }
+
+  return "bg-emerald-50 text-emerald-800";
+}
+
 function InventoryTable({ items, totalItems, onEditItem }) {
   return (
     <div className="overflow-x-auto">
@@ -48,8 +95,12 @@ function InventoryTable({ items, totalItems, onEditItem }) {
         <tbody className="divide-y divide-gray-100">
           {items.map((item) => {
             const isLowStock = item.quantity < item.threshold;
+
             const expirationDate =
               item.expirationDate ?? item.expiration;
+
+            const expirationStyle =
+              getExpirationStyle(expirationDate);
 
             return (
               <tr key={item.id} className="hover:bg-gray-50">
@@ -74,8 +125,12 @@ function InventoryTable({ items, totalItems, onEditItem }) {
                   {item.location}
                 </td>
 
-                <td className="whitespace-nowrap px-5 py-4 text-gray-700">
-                  {formatExpirationDate(expirationDate)}
+                <td className="whitespace-nowrap px-5 py-4">
+                  <span
+                    className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${expirationStyle}`}
+                  >
+                    {formatExpirationDate(expirationDate)}
+                  </span>
                 </td>
 
                 <td className="whitespace-nowrap px-5 py-4">
