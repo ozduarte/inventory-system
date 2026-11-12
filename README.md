@@ -10,8 +10,8 @@
 
 ### 3. Clone the Repository
 1. Open a terminal.
-2. Run `git clone <repository-url>`.
-3. Navigate into the project folder using `cd <project-folder>`.
+2. Run `git clone https://github.com/ozduarte/inventory-system.git`.
+3. Navigate into the project folder using `cd inventory-system`.
 
 ### 4. Install Dependencies
 1. Run `npm install` to install the project's dependencies.
