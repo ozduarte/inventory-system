@@ -1,4 +1,3 @@
-
 function formatExpirationDate(dateValue) {
   if (!dateValue || typeof dateValue !== "string") {
     return "—";
@@ -94,7 +93,11 @@ function InventoryTable({ items, totalItems, onEditItem }) {
 
         <tbody className="divide-y divide-gray-100">
           {items.map((item) => {
-            const isLowStock = item.quantity < item.threshold;
+            const isOutOfStock = item.quantity === 0;
+
+            const isLowStock =
+              item.quantity > 0 &&
+              item.quantity < item.threshold;
 
             const expirationDate =
               item.expirationDate ?? item.expiration;
@@ -136,12 +139,18 @@ function InventoryTable({ items, totalItems, onEditItem }) {
                 <td className="whitespace-nowrap px-5 py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      isLowStock
-                        ? "bg-amber-50 text-amber-800"
-                        : "bg-emerald-50 text-emerald-800"
+                      isOutOfStock
+                        ? "bg-red-50 text-red-700"
+                        : isLowStock
+                          ? "bg-amber-50 text-amber-800"
+                          : "bg-emerald-50 text-emerald-800"
                     }`}
                   >
-                    {isLowStock ? "Low stock" : "In stock"}
+                    {isOutOfStock
+                      ? "Out of stock"
+                      : isLowStock
+                        ? "Low stock"
+                        : "In stock"}
                   </span>
                 </td>
 
