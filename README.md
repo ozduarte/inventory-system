@@ -1,16 +1,21 @@
-# React + Vite
+## Getting Started
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### 1. Install Node.js
+1. Visit https://nodejs.org/.
+2. Download the LTS version.
+3. Run the installer and follow the prompts.
 
-Currently, two official plugins are available:
+### 2. Verify Installation
+1. Run `node -v` and `npm -v` to verify that both are installed.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 3. Clone the Repository
+1. Open a terminal.
+2. Run `git clone <repository-url>`.
+3. Navigate into the project folder using `cd <project-folder>`.
 
-## React Compiler
+### 4. Install Dependencies
+1. Run `npm install` to install the project's dependencies.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 5. Run the Project
+1. Run `npm run dev` to start the development server.
+2. Open the local URL displayed in the terminal to view the application.
