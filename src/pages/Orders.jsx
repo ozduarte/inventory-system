@@ -531,7 +531,7 @@ function handleEditOrder(order) {
             All Orders
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Orders stored in your PostgreSQL database.
+            Orders being processed through the database.
           </p>
         </div>
 
