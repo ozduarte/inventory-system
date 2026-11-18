@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { inventoryItems } from "../mockData";
+import { inventoryApi } from "../api";
 import InventorySearch from "../components/InventorySearch";
 import InventoryTable from "../components/InventoryTable";
 import AddItemModal from "../components/AddItemModal";
@@ -7,11 +7,32 @@ import EditItemModal from "../components/EditItemModal";
 
 function Inventory() {
   const [search, setSearch] = useState("");
-  const [items, setItems] = useState(() => inventoryItems);
+  const [items, setItems] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // Retrieve inventory from PostgreSQL when the page loads
+  useEffect(() => {
+    async function loadInventory() {
+      try {
+        setLoading(true);
+        const data = await inventoryApi.getAll();
+        setItems(data);
+        setError("");
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadInventory();
+  }, []);
+
+  // Automatically dismiss success messages
   useEffect(() => {
     if (!successMessage) return;
 
@@ -22,55 +43,94 @@ function Inventory() {
     return () => clearTimeout(timeoutId);
   }, [successMessage]);
 
+  // Search inventory
   const filteredItems = items.filter((item) =>
     `${item.name} ${item.category} ${item.location}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  function handleAddItem(newItem) {
-    setItems((previousItems) => [...previousItems, newItem]);
-    setIsAddModalOpen(false);
+  // Add inventory item to PostgreSQL
+  async function handleAddItem(newItem) {
+    try {
+      const savedItem = await inventoryApi.create(newItem);
 
-    setSuccessMessage(
-      `${newItem.name} has been added to your inventory.`
-    );
+      setItems((previousItems) => [
+        ...previousItems,
+        savedItem,
+      ]);
+
+      window.dispatchEvent(new Event("inventory-updated"));
+
+      setIsAddModalOpen(false);
+      setError("");
+
+      setSuccessMessage(
+        `${savedItem.name} has been added to your inventory.`
+      );
+    } catch (error) {
+      setError(error.message);
+    }
   }
 
+  // Open edit modal
   function handleEditItem(item) {
     setItemToEdit(item);
   }
 
-  function handleSaveEdit(updatedItem) {
-    setItems((previousItems) =>
-      previousItems.map((item) =>
-        item.id === updatedItem.id ? updatedItem : item
-      )
-    );
+  // Save changes to PostgreSQL
+  async function handleSaveEdit(updatedItem) {
+    try {
+      const savedItem = await inventoryApi.update(
+        updatedItem.id,
+        updatedItem
+      );
 
-    setItemToEdit(null);
+      setItems((previousItems) =>
+        previousItems.map((item) =>
+          item.id === savedItem.id ? savedItem : item
+        )
+      );
 
-    setSuccessMessage(
-      `${updatedItem.name} has been updated successfully.`
-    );
+      window.dispatchEvent(new Event("inventory-updated"));
+
+      setItemToEdit(null);
+      setError("");
+
+      setSuccessMessage(
+        `${savedItem.name} has been updated successfully.`
+      );
+    } catch (error) {
+      setError(error.message);
+    }
   }
 
-  function handleDeleteItem(itemId) {
+  // Delete inventory item from PostgreSQL
+  async function handleDeleteItem(itemId) {
     const deletedItem = items.find(
       (item) => item.id === itemId
     );
 
     if (!deletedItem) return;
 
-    setItems((previousItems) =>
-      previousItems.filter((item) => item.id !== itemId)
-    );
+    try {
+      await inventoryApi.remove(itemId);
 
-    setItemToEdit(null);
+      setItems((previousItems) =>
+        previousItems.filter((item) => item.id !== itemId)
+      );
 
-    setSuccessMessage(
-      `${deletedItem.name} has been deleted from your inventory.`
-    );
+      window.dispatchEvent(new Event("inventory-updated"));
+
+      setItemToEdit(null);
+      setError("");
+
+      setSuccessMessage(
+        `${deletedItem.name} has been deleted from your inventory.`
+      );
+    } catch (error) {
+      setError(error.message);
+    }
   }
 
   return (
@@ -110,17 +170,34 @@ function Inventory() {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <InventorySearch
-          search={search}
-          onSearchChange={setSearch}
-        />
+      {error && (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          {error}
+        </div>
+      )}
 
-        <InventoryTable
-          items={filteredItems}
-          totalItems={items.length}
-          onEditItem={handleEditItem}
-        />
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        {loading ? (
+          <div className="px-5 py-12 text-center text-gray-500">
+            Loading inventory...
+          </div>
+        ) : (
+          <>
+            <InventorySearch
+              search={search}
+              onSearchChange={setSearch}
+            />
+
+            <InventoryTable
+              items={filteredItems}
+              totalItems={items.length}
+              onEditItem={handleEditItem}
+            />
+          </>
+        )}
       </section>
 
       {isAddModalOpen && (
