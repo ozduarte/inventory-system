@@ -1,6 +1,12 @@
 import InventoryItemForm from "./InventoryItemForm";
 
-function EditItemModal({ item, onClose, onSave, onDelete }) {
+function EditItemModal({
+  item,
+  onClose,
+  onSave,
+  onDelete,
+  canDelete = false,
+}) {
   function handleSubmit(formData) {
     onSave({
       ...item,
@@ -64,15 +70,17 @@ function EditItemModal({ item, onClose, onSave, onDelete }) {
           onCancel={onClose}
         />
 
-        <div className="mt-4 border-t border-gray-200 pt-4">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="w-full cursor-pointer rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Delete Item
-          </button>
-        </div>
+        {canDelete && (
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="w-full cursor-pointer rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              Delete Item
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
