@@ -4,8 +4,16 @@ import {
   orderItemsApi,
   inventoryApi,
 } from "../api";
+import { useAuth } from "../AuthContext";
+import { hasPermission } from "../permissions";
 
 function Orders() {
+  const { user } = useAuth();
+  const canManageOrders = hasPermission(
+    user?.role,
+    "canManageOrders"
+  );
+
   const [orders, setOrders] = useState([]);
   const [orderNumber, setOrderNumber] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -90,6 +98,8 @@ function Orders() {
 
   // Create a new order
   async function handleAddOrder(event) {
+    if (!canManageOrders) return;
+
     event.preventDefault();
 
     setSaving(true);
@@ -124,6 +134,8 @@ function Orders() {
 
   // Add an inventory item to the selected order
   async function handleAddOrderItem(event) {
+    if (!canManageOrders) return;
+
     event.preventDefault();
 
     if (!selectedOrder) return;
@@ -161,10 +173,13 @@ function Orders() {
       setSavingItem(false);
     }
   }
-// Remove an inventory item from an order
+
+  // Remove an inventory item from an order
   async function handleRemoveOrderItem(itemId) {
+    if (!canManageOrders) return;
+
     const confirmed = window.confirm(
-        "Are you sure you want to remove this item from the order?"
+      "Are you sure you want to remove this item from the order?"
     );
 
     if (!confirmed) return;
@@ -173,33 +188,38 @@ function Orders() {
     setSuccessMessage("");
 
     try {
-        await orderItemsApi.remove(selectedOrder.id, itemId);
+      await orderItemsApi.remove(selectedOrder.id, itemId);
 
-        const updatedItems = await orderItemsApi.getAll(selectedOrder.id);
-        setOrderItems(updatedItems);
+      const updatedItems = await orderItemsApi.getAll(selectedOrder.id);
+      setOrderItems(updatedItems);
 
-        const updatedOrders = await ordersApi.getAll();
-        setOrders(updatedOrders);
+      const updatedOrders = await ordersApi.getAll();
+      setOrders(updatedOrders);
 
-        setSuccessMessage("Item removed from order successfully.");
+      setSuccessMessage("Item removed from order successfully.");
     } catch (error) {
-        setError(error.message);
+      setError(error.message);
     }
   }
+
   // Start editing an order item
-function handleEditOrderItem(item) {
+  function handleEditOrderItem(item) {
+    if (!canManageOrders) return;
+
     setEditingItemId(item.id);
     setEditItemQuantity(String(item.quantity));
     setEditItemUnitCost(
-        item.unitCost == null ? "" : String(item.unitCost)
+      item.unitCost == null ? "" : String(item.unitCost)
     );
 
     setError("");
     setSuccessMessage("");
-}
+  }
 
-// Save edited order item
+  // Save edited order item
   async function handleSaveOrderItemEdit(event) {
+    if (!canManageOrders) return;
+
     event.preventDefault();
 
     if (!selectedOrder) return;
@@ -209,81 +229,89 @@ function handleEditOrderItem(item) {
     setSuccessMessage("");
 
     try {
-        await orderItemsApi.update(
-            selectedOrder.id,
-            editingItemId,
-            {
-                quantity: Number(editItemQuantity),
-                unitCost:
-                    editItemUnitCost === ""
-                        ? null
-                        : Number(editItemUnitCost),
-            }
-        );
+      await orderItemsApi.update(
+        selectedOrder.id,
+        editingItemId,
+        {
+          quantity: Number(editItemQuantity),
+          unitCost:
+            editItemUnitCost === ""
+              ? null
+              : Number(editItemUnitCost),
+        }
+      );
 
-        const updatedItems = await orderItemsApi.getAll(
-            selectedOrder.id
-        );
+      const updatedItems = await orderItemsApi.getAll(
+        selectedOrder.id
+      );
 
-        setOrderItems(updatedItems);
+      setOrderItems(updatedItems);
 
-        const updatedOrders = await ordersApi.getAll();
-        setOrders(updatedOrders);
+      const updatedOrders = await ordersApi.getAll();
+      setOrders(updatedOrders);
 
-        setEditingItemId(null);
-        setEditItemQuantity("");
-        setEditItemUnitCost("");
+      setEditingItemId(null);
+      setEditItemQuantity("");
+      setEditItemUnitCost("");
 
-        setSuccessMessage("Order item updated successfully.");
+      setSuccessMessage("Order item updated successfully.");
     } catch (error) {
-        setError(error.message);
+      setError(error.message);
     } finally {
-        setSavingItemEdit(false);
+      setSavingItemEdit(false);
     }
   }
+
   // Update an order's status
   async function handleStatusChange(orderId, newStatus) {
-      try {
-          const updatedOrder = await ordersApi.updateStatus(
-              orderId,
-              newStatus
-          );
+    if (!canManageOrders) return;
 
-          setOrders((currentOrders) =>
-              currentOrders.map((order) =>
-                  order.id === orderId ? updatedOrder : order
-              )
-          );
+    try {
+      const updatedOrder = await ordersApi.updateStatus(
+        orderId,
+        newStatus
+      );
 
-          if (newStatus === "Delivered") {
-              await loadInventory();
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === orderId ? updatedOrder : order
+        )
+      );
 
-              window.dispatchEvent(
-                  new Event("inventory-updated")
-              );
-          }
+      if (newStatus === "Delivered") {
+        await loadInventory();
 
-          window.dispatchEvent(
-              new Event("orders-updated")
-          );
-
-          setSuccessMessage("Order status updated successfully.");
-      } catch (error) {
-          setError(error.message);
+        window.dispatchEvent(
+          new Event("inventory-updated")
+        );
       }
+
+      window.dispatchEvent(
+        new Event("orders-updated")
+      );
+
+      setSuccessMessage("Order status updated successfully.");
+    } catch (error) {
+      setError(error.message);
+    }
   }
+
   // Start editing an order
-function handleEditOrder(order) {
+  function handleEditOrder(order) {
+    if (!canManageOrders) return;
+
     setEditingOrderId(order.id);
     setEditOrderNumber(order.orderNumber);
     setEditSupplier(order.supplier);
 
     setError("");
     setSuccessMessage("");
-}
+  }
 
-// Save edited order details
+  // Save edited order details
   async function handleSaveEdit(event) {
+    if (!canManageOrders) return;
+
     event.preventDefault();
 
     setSavingEdit(true);
@@ -291,37 +319,39 @@ function handleEditOrder(order) {
     setSuccessMessage("");
 
     try {
-        const updatedOrder = await ordersApi.update(editingOrderId, {
-            orderNumber: editOrderNumber,
-            supplier: editSupplier,
-        });
+      const updatedOrder = await ordersApi.update(editingOrderId, {
+        orderNumber: editOrderNumber,
+        supplier: editSupplier,
+      });
 
-        setOrders((currentOrders) =>
-            currentOrders.map((order) =>
-                order.id === editingOrderId ? updatedOrder : order
-            )
-        );
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === editingOrderId ? updatedOrder : order
+        )
+      );
 
-        if (selectedOrder?.id === editingOrderId) {
-            setSelectedOrder(updatedOrder);
-        }
+      if (selectedOrder?.id === editingOrderId) {
+        setSelectedOrder(updatedOrder);
+      }
 
-        setEditingOrderId(null);
-        setEditOrderNumber("");
-        setEditSupplier("");
+      setEditingOrderId(null);
+      setEditOrderNumber("");
+      setEditSupplier("");
 
-        setSuccessMessage("Order details updated successfully.");
+      setSuccessMessage("Order details updated successfully.");
 
-        window.dispatchEvent(new Event("orders-updated"));
+      window.dispatchEvent(new Event("orders-updated"));
     } catch (error) {
-        setError(error.message);
+      setError(error.message);
     } finally {
-        setSavingEdit(false);
+      setSavingEdit(false);
     }
   }
 
   // Delete an order
   async function handleDeleteOrder(id) {
+    if (!canManageOrders) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this order?"
     );
@@ -359,82 +389,81 @@ function handleEditOrder(order) {
         <h1 className="text-2xl font-bold text-gray-900">
           Orders
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage supplier orders and deliveries.
-        </p>
       </div>
 
       {/* Add order form */}
-      <section className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-5 font-semibold text-gray-900">
-          Create New Order
-        </h2>
+      {canManageOrders && (
+        <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="mb-5 font-semibold text-gray-900">
+            Create New Order
+          </h2>
 
-        <form onSubmit={handleAddOrder}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <form onSubmit={handleAddOrder}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Order Number
-              </label>
-              <input
-                type="text"
-                value={orderNumber}
-                onChange={(event) =>
-                  setOrderNumber(event.target.value)
-                }
-                placeholder="ORD-004"
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              />
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Order Number
+                </label>
+                <input
+                  type="text"
+                  value={orderNumber}
+                  onChange={(event) =>
+                    setOrderNumber(event.target.value)
+                  }
+                  placeholder="ORD-004"
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Supplier
+                </label>
+                <input
+                  type="text"
+                  value={supplier}
+                  onChange={(event) =>
+                    setSupplier(event.target.value)
+                  }
+                  placeholder="Supplier name"
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  value={status}
+                  onChange={(event) =>
+                    setStatus(event.target.value)
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="Requested">Requested</option>
+                  <option value="Ordered">Ordered</option>
+                  <option value="Delivered">Delivered</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Create Order"}
+                </button>
+              </div>
+
             </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Supplier
-              </label>
-              <input
-                type="text"
-                value={supplier}
-                onChange={(event) =>
-                  setSupplier(event.target.value)
-                }
-                placeholder="Supplier name"
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value)
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="Requested">Requested</option>
-                <option value="Ordered">Ordered</option>
-                <option value="Delivered">Delivered</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Create Order"}
-              </button>
-            </div>
-
-          </div>
-        </form>
-      </section>
+          </form>
+        </section>
+      )}
 
       {/* Messages */}
       {error && (
@@ -455,74 +484,74 @@ function handleEditOrder(order) {
         </div>
       )}
 
-    {/* Edit order form */}
-    {editingOrderId !== null && (
-    <section className="rounded-xl border border-yellow-200 bg-white p-6">
-        <h2 className="mb-5 font-semibold text-gray-900">
+      {/* Edit order form */}
+      {canManageOrders && editingOrderId !== null && (
+        <section className="rounded-xl border border-yellow-200 bg-white p-6">
+          <h2 className="mb-5 font-semibold text-gray-900">
             Edit Order
-        </h2>
+          </h2>
 
-        <form onSubmit={handleSaveEdit}>
+          <form onSubmit={handleSaveEdit}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                        Order Number
-                    </label>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Order Number
+                </label>
 
-                    <input
-                        type="text"
-                        value={editOrderNumber}
-                        onChange={(event) =>
-                            setEditOrderNumber(event.target.value)
-                        }
-                        required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    />
-                </div>
+                <input
+                  type="text"
+                  value={editOrderNumber}
+                  onChange={(event) =>
+                    setEditOrderNumber(event.target.value)
+                  }
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
 
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                        Supplier
-                    </label>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Supplier
+                </label>
 
-                    <input
-                        type="text"
-                        value={editSupplier}
-                        onChange={(event) =>
-                            setEditSupplier(event.target.value)
-                        }
-                        required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    />
-                </div>
+                <input
+                  type="text"
+                  value={editSupplier}
+                  onChange={(event) =>
+                    setEditSupplier(event.target.value)
+                  }
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
 
             </div>
 
             <div className="mt-5 flex gap-3">
-                <button
-                    type="submit"
-                    disabled={savingEdit}
-                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                    {savingEdit ? "Saving..." : "Save Changes"}
-                </button>
+              <button
+                type="submit"
+                disabled={savingEdit}
+                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </button>
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        setEditingOrderId(null);
-                        setEditOrderNumber("");
-                        setEditSupplier("");
-                    }}
-                    className="rounded-lg border border-gray-300 px-5 py-2 text-sm hover:bg-gray-100"
-                >
-                    Cancel
-                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingOrderId(null);
+                  setEditOrderNumber("");
+                  setEditSupplier("");
+                }}
+                className="rounded-lg border border-gray-300 px-5 py-2 text-sm hover:bg-gray-100"
+              >
+                Cancel
+              </button>
             </div>
-        </form>
-    </section>
-    )}
+          </form>
+        </section>
+      )}
 
       {/* Orders table */}
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -585,24 +614,32 @@ function handleEditOrder(order) {
                     </td>
 
                     <td className="px-5 py-4">
-                      <select
-                        value={order.status}
-                        onChange={(event) =>
-                          handleStatusChange(
-                            order.id,
-                            event.target.value
-                          )
-                        }
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      >
-                        <option value="Requested">Requested</option>
-                        <option value="Ordered">Ordered</option>
-                        <option value="Delivered">Delivered</option>
-                      </select>
+                      {canManageOrders ? (
+                        <select
+                          value={order.status}
+                          onChange={(event) =>
+                            handleStatusChange(
+                              order.id,
+                              event.target.value
+                            )
+                          }
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          <option value="Requested">Requested</option>
+                          <option value="Ordered">Ordered</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      ) : (
+                        <span className="text-sm font-medium text-gray-700">
+                          {order.status}
+                        </span>
+                      )}
                     </td>
+
                     <td className="px-5 py-4 font-medium text-gray-900">
                       ${Number(order.orderTotal || 0).toFixed(2)}
                     </td>
+
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -612,21 +649,26 @@ function handleEditOrder(order) {
                         >
                           View Items
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => handleEditOrder(order)}
-                            className="rounded-lg bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100"
-                        >
-                            Edit
-                        </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteOrder(order.id)}
-                          className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
-                        >
-                          Delete
-                        </button>
+                        {canManageOrders && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleEditOrder(order)}
+                              className="rounded-lg bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -664,93 +706,95 @@ function handleEditOrder(order) {
           </div>
 
           {/* Add inventory item form */}
-          <div className="mb-6 rounded-lg bg-gray-50 p-4">
-            <h3 className="mb-4 font-semibold text-gray-800">
-              Add Inventory Item
-            </h3>
+          {canManageOrders && (
+            <div className="mb-6 rounded-lg bg-gray-50 p-4">
+              <h3 className="mb-4 font-semibold text-gray-800">
+                Add Inventory Item
+              </h3>
 
-            {inventoryItems.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                No inventory items are available. Add an item to your
-                Inventory page first.
-              </p>
-            ) : (
-              <form onSubmit={handleAddOrderItem}>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {inventoryItems.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No inventory items are available. Add an item to your
+                  Inventory page first.
+                </p>
+              ) : (
+                <form onSubmit={handleAddOrderItem}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Inventory Item
-                    </label>
-                    <select
-                      value={selectedInventoryItemId}
-                      onChange={(event) =>
-                        setSelectedInventoryItemId(event.target.value)
-                      }
-                      required
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                    >
-                      <option value="">
-                        Select an inventory item
-                      </option>
-
-                      {inventoryItems.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Inventory Item
+                      </label>
+                      <select
+                        value={selectedInventoryItemId}
+                        onChange={(event) =>
+                          setSelectedInventoryItemId(event.target.value)
+                        }
+                        required
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">
+                          Select an inventory item
                         </option>
-                      ))}
-                    </select>
+
+                        {inventoryItems.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value={itemQuantity}
+                        onChange={(event) =>
+                          setItemQuantity(event.target.value)
+                        }
+                        placeholder="Enter quantity"
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Unit Cost (Optional)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={unitCost}
+                        onChange={(event) =>
+                          setUnitCost(event.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+
                   </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="0.001"
-                      value={itemQuantity}
-                      onChange={(event) =>
-                        setItemQuantity(event.target.value)
-                      }
-                      placeholder="Enter quantity"
-                      required
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    />
+                  <div className="mt-4">
+                    <button
+                      type="submit"
+                      disabled={savingItem}
+                      className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {savingItem ? "Adding Item..." : "Add Item"}
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Unit Cost (Optional)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={unitCost}
-                      onChange={(event) =>
-                        setUnitCost(event.target.value)
-                      }
-                      placeholder="0.00"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                </div>
-
-                <div className="mt-4">
-                  <button
-                    type="submit"
-                    disabled={savingItem}
-                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {savingItem ? "Adding Item..." : "Add Item"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+                </form>
+              )}
+            </div>
+          )}
 
           {/* Display order items */}
           <h3 className="mb-3 font-semibold text-gray-800">
@@ -778,129 +822,135 @@ function handleEditOrder(order) {
                 <tbody>
                   {orderItems.map((item) => (
                     <>
-                        <tr key={item.id} className="border-b">
-                            <td className="p-3">{item.itemName}</td>
+                      <tr key={item.id} className="border-b">
+                        <td className="p-3">{item.itemName}</td>
 
-                            <td className="p-3">
-                                {Number(item.quantity)}
-                            </td>
+                        <td className="p-3">
+                          {Number(item.quantity)}
+                        </td>
 
-                            <td className="p-3">{item.unit}</td>
+                        <td className="p-3">{item.unit}</td>
 
-                            <td className="p-3">
-                                {item.unitCost == null
-                                    ? "—"
-                                    : `$${Number(item.unitCost).toFixed(2)}`}
-                            </td>
-                            <td className="p-3 font-medium text-gray-900">
-                                ${Number(item.lineTotal).toFixed(2)}
-                            </td>
-                            <td className="p-3">
-                                <div className="flex gap-2">
-                                  {selectedOrder.status !== "Delivered" && (
-                                      <>
-                                          <button
-                                              onClick={() => handleEditOrderItem(item)}
-                                              className="text-blue-600 hover:text-blue-800 mr-3"
-                                          >
-                                              Edit
-                                          </button>
+                        <td className="p-3">
+                          {item.unitCost == null
+                            ? "—"
+                            : `$${Number(item.unitCost).toFixed(2)}`}
+                        </td>
 
-                                          <button
-                                              onClick={() => handleRemoveOrderItem(item.id)}
-                                              className="text-red-600 hover:text-red-800"
-                                          >
-                                              Remove
-                                          </button>
-                                      </>
-                                  )}
-                                </div>
-                            </td>
+                        <td className="p-3 font-medium text-gray-900">
+                          ${Number(item.lineTotal).toFixed(2)}
+                        </td>
+
+                        <td className="p-3">
+                          <div className="flex gap-2">
+                            {canManageOrders &&
+                              selectedOrder.status !== "Delivered" && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditOrderItem(item)}
+                                    className="text-blue-600 hover:text-blue-800 mr-3"
+                                  >
+                                    Edit
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveOrderItem(item.id)}
+                                    className="text-red-600 hover:text-red-800"
+                                  >
+                                    Remove
+                                  </button>
+                                </>
+                              )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {canManageOrders && editingItemId === item.id && (
+                        <tr key={`${item.id}-edit`} className="border-b bg-gray-50">
+                          <td colSpan="6" className="p-4">
+                            <form
+                              onSubmit={handleSaveOrderItemEdit}
+                              className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+                            >
+                              <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                  Quantity
+                                </label>
+
+                                <input
+                                  type="number"
+                                  step="0.001"
+                                  min="0.001"
+                                  value={editItemQuantity}
+                                  onChange={(event) =>
+                                    setEditItemQuantity(event.target.value)
+                                  }
+                                  required
+                                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                  Unit Cost
+                                </label>
+
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={editItemUnitCost}
+                                  onChange={(event) =>
+                                    setEditItemUnitCost(event.target.value)
+                                  }
+                                  placeholder="Optional"
+                                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                />
+                              </div>
+
+                              <div className="flex items-end gap-2">
+                                <button
+                                  type="submit"
+                                  disabled={savingItemEdit}
+                                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {savingItemEdit ? "Saving..." : "Save Changes"}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingItemId(null);
+                                    setEditItemQuantity("");
+                                    setEditItemUnitCost("");
+                                  }}
+                                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
+                          </td>
                         </tr>
-
-                        {editingItemId === item.id && (
-                            <tr key={`${item.id}-edit`} className="border-b bg-gray-50">
-                                <td colSpan="6" className="p-4">
-                                    <form
-                                        onSubmit={handleSaveOrderItemEdit}
-                                        className="grid grid-cols-1 gap-4 sm:grid-cols-3"
-                                    >
-                                        <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                                Quantity
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                step="0.001"
-                                                min="0.001"
-                                                value={editItemQuantity}
-                                                onChange={(event) =>
-                                                    setEditItemQuantity(event.target.value)
-                                                }
-                                                required
-                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                                Unit Cost
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={editItemUnitCost}
-                                                onChange={(event) =>
-                                                    setEditItemUnitCost(event.target.value)
-                                                }
-                                                placeholder="Optional"
-                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                                            />
-                                        </div>
-
-                                        <div className="flex items-end gap-2">
-                                            <button
-                                                type="submit"
-                                                disabled={savingItemEdit}
-                                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                                            >
-                                                {savingItemEdit ? "Saving..." : "Save Changes"}
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setEditingItemId(null);
-                                                    setEditItemQuantity("");
-                                                    setEditItemUnitCost("");
-                                                }}
-                                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                </td>
-                            </tr>
-                        )}
+                      )}
                     </>
-                ))}
+                  ))}
                 </tbody>
               </table>
+
               {/* Overall Order Total */}
               <div className="mt-5 flex justify-end">
-                  <div className="rounded-lg bg-gray-50 px-6 py-4">
-                      <p className="text-sm font-medium text-gray-500">
-                          Overall Order Total
-                      </p>
+                <div className="rounded-lg bg-gray-50 px-6 py-4">
+                  <p className="text-sm font-medium text-gray-500">
+                    Overall Order Total
+                  </p>
 
-                      <p className="mt-1 text-2xl font-bold text-gray-900">
-                          ${orderTotal.toFixed(2)}
-                      </p>
-                  </div>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    ${orderTotal.toFixed(2)}
+                  </p>
+                </div>
               </div>
             </div>
           )}

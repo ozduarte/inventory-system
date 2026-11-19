@@ -1,11 +1,31 @@
 import { useEffect, useState } from "react";
 import { inventoryApi } from "../api";
+import { useAuth } from "../AuthContext";
+import { hasPermission } from "../permissions";
+
 import InventorySearch from "../components/InventorySearch";
 import InventoryTable from "../components/InventoryTable";
 import AddItemModal from "../components/AddItemModal";
 import EditItemModal from "../components/EditItemModal";
 
 function Inventory() {
+  const { user } = useAuth();
+
+  const canAddInventory = hasPermission(
+    user?.role,
+    "canAddInventory"
+  );
+
+  const canEditInventory = hasPermission(
+    user?.role,
+    "canEditInventory"
+  );
+
+  const canDeleteInventory = hasPermission(
+    user?.role,
+    "canDeleteInventory"
+  );
+
   const [search, setSearch] = useState("");
   const [items, setItems] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -75,6 +95,8 @@ function Inventory() {
 
   // Open edit modal
   function handleEditItem(item) {
+    if (!canEditInventory) return;
+
     setItemToEdit(item);
   }
 
@@ -107,6 +129,8 @@ function Inventory() {
 
   // Delete inventory item from PostgreSQL
   async function handleDeleteItem(itemId) {
+    if (!canDeleteInventory) return;
+
     const deletedItem = items.find(
       (item) => item.id === itemId
     );
@@ -142,13 +166,15 @@ function Inventory() {
           </h1>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="self-start whitespace-nowrap rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
-        >
-          + Add Item
-        </button>
+        {canAddInventory && (
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="self-start whitespace-nowrap rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
+          >
+            + Add Item
+          </button>
+        )}
       </div>
 
       {successMessage && (
@@ -213,6 +239,7 @@ function Inventory() {
           onClose={() => setItemToEdit(null)}
           onSave={handleSaveEdit}
           onDelete={handleDeleteItem}
+          canDelete={canDeleteInventory}
         />
       )}
     </div>
