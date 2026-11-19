@@ -1,5 +1,5 @@
-
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
+import { useAuth } from "../AuthContext";
 
 const links = [
   { name: "Dashboard", path: "/" },
@@ -8,6 +8,14 @@ const links = [
 ];
 
 function Sidebar({ onNavigate }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
       <div className="border-b border-gray-200 px-5 py-6">
@@ -38,6 +46,20 @@ function Sidebar({ onNavigate }) {
           </NavLink>
         ))}
       </nav>
+
+      <div className="border-t border-gray-200 p-4">
+        <p className="mb-3 text-xs text-gray-500">
+          {user?.role}
+        </p>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-red-600"
+        >
+          Sign Out
+        </button>
+      </div>
     </aside>
   );
 }
