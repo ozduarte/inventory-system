@@ -3,7 +3,6 @@ import { createContext, useContext, useState } from "react";
 const AuthContext = createContext(null);
 
 // TEMPORARY DEMO ACCOUNTS
-// Replace with backend authentication once the API is ready.
 const demoAccounts = [
   {
     email: "admin@stockroom.com",
