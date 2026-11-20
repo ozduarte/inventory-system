@@ -12,7 +12,7 @@ const itemColumns = `
     unit,
     threshold::float8 AS threshold,
     location,
-    expiration_date AS "expirationDate",
+    expiration_date::text AS "expirationDate",
     created_at AS "createdAt",
     updated_at AS "updatedAt"
 `;
